@@ -1,11 +1,13 @@
-from math import *
+import time
+from time import sleep
 
-print (exp(-3))
+startTime  = time.time()
+print(startTime)
 
-print (pow(3,0))
+for i in range(0,1000):
+    a = i
 
-print (factorial(0))
+endTime = time.time()
+print(endTime)
 
-print (exp(-2))
-
-print (exp(-4))
+print ('time diff:',endTime-startTime)
