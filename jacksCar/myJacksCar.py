@@ -24,7 +24,7 @@ def poission(n,lam):
 figureIndex = 0
 
 class JackCar:
-    def __init__(self,maxCars = 20,maxMoveOfCarr = 5,rentalRequestFirstLoc = 3,rentalRequestSecondLoc = 4,returnsFirstLoc = 3,returnsSecondLoc = 2,
+    def __init__(self,maxCars = 40,maxMoveOfCarr = 50,rentalRequestFirstLoc = 6,rentalRequestSecondLoc = 8,returnsFirstLoc = 6,returnsSecondLoc = 4,
                  disCount = 0.9,rentalCredit = 10,moveCarCost = 2,theta = 0.001):
         self.max_cars =maxCars
         self.max_move_of_cars = maxMoveOfCarr
@@ -228,7 +228,7 @@ carsValue.prettyPrintPolicy()
 carsValue.prettyPrintStateValue()
 endTime = time.time()
 
-print ('Policy Iteration Time:',endTime-startTime)
+print ('Value Iteration Time:',endTime-startTime)
 
 plt.show()
 
