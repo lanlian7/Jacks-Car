@@ -1,13 +1,12 @@
-import time
-from time import sleep
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d.axes3d import Axes3D, get_test_data
+from matplotlib import cm
+import numpy as np
+from itertools import product
 
-startTime  = time.time()
-print(startTime)
 
-for i in range(0,1000):
-    a = i
 
-endTime = time.time()
-print(endTime)
 
-print ('time diff:',endTime-startTime)
+list = 0.1*range(0,11)
+
+print(list)

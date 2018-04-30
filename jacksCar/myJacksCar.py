@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from math import *
 import time
+from _overlapped import NULL
 
 #poission cache ,for it frequently uses
 poissonBackup = dict()
@@ -24,7 +25,7 @@ def poission(n,lam):
 figureIndex = 0
 
 class JackCar:
-    def __init__(self,maxCars = 40,maxMoveOfCarr = 50,rentalRequestFirstLoc = 6,rentalRequestSecondLoc = 8,returnsFirstLoc = 6,returnsSecondLoc = 4,
+    def __init__(self,maxCars = 20,maxMoveOfCarr = 5,rentalRequestFirstLoc = 3,rentalRequestSecondLoc = 4,returnsFirstLoc = 3,returnsSecondLoc = 2,
                  disCount = 0.9,rentalCredit = 10,moveCarCost = 2,theta = 0.001):
         self.max_cars =maxCars
         self.max_move_of_cars = maxMoveOfCarr
@@ -100,14 +101,14 @@ class JackCar:
         
         returns -=self.move_car_cost*abs(action)
         
-        numOfCarsFirstLoc = int(min(state[0]-action,self.max_cars))
-        numOfCarsSecondLoc = int(min(state[1]+action,self.max_cars))
+        avalibleOfFirstLoc = int(min(state[0]-action,self.max_cars))
+        avalibleOfSecondLoc = int(min(state[1]+action,self.max_cars))
         
-        for rentalRequestFirstLoc in range(0,numOfCarsFirstLoc):
-            for rentalRenquestSecondLoc in range(0,numOfCarsSecondLoc):
+        for rentalRequestFirstLoc in range(0,avalibleOfFirstLoc+1):
+            for rentalRenquestSecondLoc in range(0,avalibleOfSecondLoc+1):
                 
-                numOfCarsFirstLoc = int(min(state[0]-action,self.max_cars))
-                numOfCarsSecondLoc = int(min(state[1]+action,self.max_cars))
+                numOfCarsFirstLoc = avalibleOfFirstLoc
+                numOfCarsSecondLoc = avalibleOfSecondLoc
                
                 realRentalFirstLoc = min(numOfCarsFirstLoc,rentalRequestFirstLoc)
                 realRentalSecondLoc = min(numOfCarsSecondLoc,rentalRenquestSecondLoc)
@@ -120,7 +121,7 @@ class JackCar:
                 prob = poission(rentalRequestFirstLoc,self.rental_request_first_loc)*poission(realRentalSecondLoc,self.rental_request_second_loc)
                 
                 #当天借车当天还Ϊtrue
-                constantReturndCars = False
+                constantReturndCars = True
                 if(constantReturndCars):
                     returnedCarsFirstLoc = self.returns_first_loc
                     returnedCarsSecondLoc = self.returns_second_loc
@@ -131,8 +132,8 @@ class JackCar:
                     numOfCarsFirstLoc_ = numOfCarsFirstLoc
                     numOfCarsSecondLoc_ = numOfCarsSecondLoc
                     prob_ = prob
-                    for returnedCarsFirstLoc in range(0, realRentalFirstLoc):
-                        for returnedCarsSecondLoc in range(0, realRentalSecondLoc):
+                    for returnedCarsFirstLoc in range(0, realRentalFirstLoc+realRentalSecondLoc+1):
+                        for returnedCarsSecondLoc in range(0, realRentalFirstLoc+realRentalSecondLoc+1):
                             numOfCarsFirstLoc = numOfCarsFirstLoc_
                             numOfCarsSecondLoc = numOfCarsSecondLoc_
                             prob = prob_
@@ -200,35 +201,111 @@ class JackCar:
         ax.set_xlabel(labels[0])   
         ax.set_ylabel(labels[1])
         ax.set_zlabel(labels[2])
+        ax.set_title(labels[3])
         
-    def prettyPrintPolicy(self):
-        self.prettyPrint(self.policy,['#of cars in first location','#of cars in second location','#of cars to move during night'])
+    def prettyPrintPolicy(self,title):
+        self.prettyPrint(self.policy,['#of cars in first location','#of cars in second location','of cars to move during night',title+'Action'])
         
-    def prettyPrintStateValue(self):
-        self.prettyPrint(self.stateValue,['# of cars in first location', '# of cars in second location', 'expected returns'])
+    def prettyPrintStateValue(self,title):
+        self.prettyPrint(self.stateValue,['# of cars in first location', '# of cars in second location', 'expected returns',title+'ExpectedReturn'])
         
         
-print ('start policy Iteration =====================================')
-startTime = time.time()
-cars = JackCar()
-cars.policyIteration()
-cars.prettyPrintPolicy()
-cars.prettyPrintStateValue()
-endTime = time.time()
- 
-print ('Policy Iteration Time:',endTime-startTime)
+# print ('start policy Iteration =====================================')
+# startTime = time.time()
+# cars = JackCar()
+# cars.policyIteration()
+# cars.prettyPrintPolicy('Policy Iteration:')
+# cars.prettyPrintStateValue('Policy Iteration:')
+# endTime = time.time()
+#  
+# print ('Policy Iteration Time:',endTime-startTime)
+#  
+# print()
+# print()
+# print('start Value Iteration=========================================')
+# startTime = time.time()
+# carsValue = JackCar()
+# carsValue.valueIteration()
+# carsValue.prettyPrintPolicy('Value Iteration:')
+# carsValue.prettyPrintStateValue('Value Iteration:')
+# endTime = time.time()
+#  
+# print ('Value Iteration Time:',endTime-startTime)
 
-print()
-print()
-print('start Value Iteration=========================================')
-startTime = time.time()
-carsValue = JackCar()
-carsValue.valueIteration()
-carsValue.prettyPrintPolicy()
-carsValue.prettyPrintStateValue()
-endTime = time.time()
 
-print ('Value Iteration Time:',endTime-startTime)
+print ('start compare that different discount  to affect the outcome==========================')
+
+#画图，将对比结果画在一张图上
+def printConparePicture(states,dictPolicys,dictExpectedReturns):
+        #figureIndex +=1
+        fig, axs= plt.subplots(3, 4, figsize=plt.figaspect(0.5), subplot_kw={'projection': '3d'})
+        count  = 0
+        for i in range(0,3):
+            for j in range(0,4):
+                if(count>=len(dictPolicys)):
+                    break;
+                AxisXPrint = []
+                AxisYPrint = []
+                AxisZ = []
+                for m,n in states:
+                    AxisXPrint.append(m)
+                    AxisYPrint.append(n)
+                    AxisZ.append(dictPolicys[count][i,j])
+                axs[i,j].scatter(AxisXPrint,AxisYPrint,dictPolicys[count])
+                axs[i,j].set_xlabel('#first location')   
+                axs[i,j].set_ylabel('#in second location')
+                axs[i,j].set_zlabel('#Actions')
+                axs[i,j].set_title('discount = '+str(count*0.1))
+                count += 1
+
+
+        fig, axs= plt.subplots(3, 4, figsize=plt.figaspect(0.5), subplot_kw={'projection': '3d'})
+        count  = 0
+        for i in range(0,3):
+            for j in range(0,4):
+                if(count>=len(dictExpectedReturns)):
+                    break;
+                AxisXPrint = []
+                AxisYPrint = []
+                AxisZ = []
+                for m,n in states:
+                    AxisXPrint.append(m)
+                    AxisYPrint.append(n)
+                    AxisZ.append(dictExpectedReturns[count][i,j])
+                axs[i,j].scatter(AxisXPrint,AxisYPrint,dictExpectedReturns[count])
+                axs[i,j].set_xlabel('#first location')   
+                axs[i,j].set_ylabel('#in second location')
+                axs[i,j].set_zlabel('#Expected Return')
+                axs[i,j].set_title('discount = '+str(count*0.1))
+                count += 1                
+                
+                
+        
+states = [] 
+list=[]
+
+dictPolicys = []
+dictExpectedReturns = []
+for discount in range(0,11):
+    startTime = time.time()
+    cars = JackCar(disCount=discount*0.1)
+    cars.policyIteration()
+#     cars.prettyPrintPolicy('Policy Iteration:'+"discount="+str(discount*0.1))
+#     cars.prettyPrintStateValue('Policy Iteration:'+"discount="+str(discount*0.1))
+    print("================================start with discount = ",discount*0.1,'============================================')
+    dictPolicys.append(cars.policy)
+    dictExpectedReturns.append(cars.stateValue)
+    states = cars.states
+    endTime = time.time()
+    list.append(endTime-startTime)
+
+printConparePicture(states,dictPolicys,dictExpectedReturns)
+
+plt.figure(figureIndex)
+plt.plot(range(0,11),list);
+plt.xlabel("#discount*10")
+plt.ylabel("#speed Time")
+plt.title("compare result with change discount")
 
 plt.show()
 
