@@ -44,6 +44,7 @@ class JackCar:
         
         self.improvePolicy = False
         self.policyImprovementInd = 0
+        self.valueImprovementInd = 0
         self.endImprove = False
         
         self.policy = np.zeros((self.max_cars+1,self.max_cars+1))
@@ -155,8 +156,7 @@ class JackCar:
         
     
     def valueIteration(self):
-        diff = 1
-        changeCount = 0
+        diff = 100
         while diff>self.theta:
             diff = 0.0
             
@@ -178,8 +178,8 @@ class JackCar:
                 self.stateValue[i, j] = np.max(actionReturns)
             
             diff = np.sum(np.abs(self.stateValue - oldStateValue)) 
-            changeCount += 1
-            print('changeCount..',changeCount)
+            self.valueImprovementInd += 1
+            print('changeCount..',self.valueImprovementInd)
             print ('policy for',np.sum(self.policy!=oldPolicy),'states changes') 
             print ('diff..',diff)
  
@@ -210,38 +210,39 @@ class JackCar:
         self.prettyPrint(self.stateValue,['# of cars in first location', '# of cars in second location', 'expected returns',title+'ExpectedReturn'])
         
         
-# print ('start policy Iteration =====================================')
-# startTime = time.time()
-# cars = JackCar()
-# cars.policyIteration()
-# cars.prettyPrintPolicy('Policy Iteration:')
-# cars.prettyPrintStateValue('Policy Iteration:')
-# endTime = time.time()
-#  
-# print ('Policy Iteration Time:',endTime-startTime)
-#  
-# print()
-# print()
-# print('start Value Iteration=========================================')
-# startTime = time.time()
-# carsValue = JackCar()
-# carsValue.valueIteration()
-# carsValue.prettyPrintPolicy('Value Iteration:')
-# carsValue.prettyPrintStateValue('Value Iteration:')
-# endTime = time.time()
-#  
-# print ('Value Iteration Time:',endTime-startTime)
+print ('start policy Iteration =====================================')
+startTime = time.time()
+cars = JackCar()
+cars.policyIteration()
+cars.prettyPrintPolicy('Policy Iteration:')
+cars.prettyPrintStateValue('Policy Iteration:')
+endTime = time.time()
+  
+print ('Policy Iteration Time:',endTime-startTime)
+print ('Policy Iteration Count:',cars.policyImprovementInd)
+  
+print()
+print()
+print('start Value Iteration=========================================')
+startTime = time.time()
+carsValue = JackCar()
+carsValue.valueIteration()
+carsValue.prettyPrintPolicy('Value Iteration:')
+carsValue.prettyPrintStateValue('Value Iteration:')
+endTime = time.time()
+   
+print ('Value Iteration Time:',endTime-startTime)
+print ('Value Iteration count:',carsValue.valueImprovementInd)
+ 
 
-
-print ('start compare that different discount  to affect the outcome==========================')
-
+ 
 #画图，将对比结果画在一张图上
-def printConparePicture(states,dictPolicys,dictExpectedReturns):
+def printConparePicture(states,dictPolicys,dictExpectedReturns,title,CompareArr):
         #figureIndex +=1
-        fig, axs= plt.subplots(3, 4, figsize=plt.figaspect(0.5), subplot_kw={'projection': '3d'})
+        fig, axs= plt.subplots(3, 2, figsize=plt.figaspect(0.5), subplot_kw={'projection': '3d'})
         count  = 0
         for i in range(0,3):
-            for j in range(0,4):
+            for j in range(0,2):
                 if(count>=len(dictPolicys)):
                     break;
                 AxisXPrint = []
@@ -255,14 +256,14 @@ def printConparePicture(states,dictPolicys,dictExpectedReturns):
                 axs[i,j].set_xlabel('#first location')   
                 axs[i,j].set_ylabel('#in second location')
                 axs[i,j].set_zlabel('#Actions')
-                axs[i,j].set_title('discount = '+str(count*0.1))
+                axs[i,j].set_title(title+str(CompareArr[count]))
                 count += 1
-
-
-        fig, axs= plt.subplots(3, 4, figsize=plt.figaspect(0.5), subplot_kw={'projection': '3d'})
+  
+  
+        fig, axs= plt.subplots(3,2, figsize=plt.figaspect(0.5), subplot_kw={'projection': '3d'})
         count  = 0
         for i in range(0,3):
-            for j in range(0,4):
+            for j in range(0,2):
                 if(count>=len(dictExpectedReturns)):
                     break;
                 AxisXPrint = []
@@ -276,36 +277,64 @@ def printConparePicture(states,dictPolicys,dictExpectedReturns):
                 axs[i,j].set_xlabel('#first location')   
                 axs[i,j].set_ylabel('#in second location')
                 axs[i,j].set_zlabel('#Expected Return')
-                axs[i,j].set_title('discount = '+str(count*0.1))
+                axs[i,j].set_title(title+str(CompareArr[count]))
                 count += 1                
-                
-                
-        
-states = [] 
-list=[]
+          
+# states = [] 
+# Times=[]
+# print ('start compare that different discount  to affect the outcome==========================')
+# DiscountChangePolicys = []
+# DiscountChangeExpectedReturns = []
+# for discount in range(0,11):
+#     startTime = time.time()
+#     cars = JackCar(disCount=discount*0.1)
+#     cars.policyIteration()
+#     print("========================start with discount = ",discount*0.1,'==============================')
+#     DiscountChangePolicys.append(cars.policy)
+#     DiscountChangeExpectedReturns.append(cars.stateValue)
+#     states = cars.states
+#     endTime = time.time()
+#     Times.append(endTime-startTime)
+#   
+# printConparePicture(states,DiscountChangePolicys,DiscountChangeExpectedReturns,"DisCount=",0.1)
+#  
+# plt.figure(figureIndex)
+# plt.plot(range(0,11),Times);
+# plt.xlabel("#discount*10")
+# plt.ylabel("#speed Time")
+# plt.title("compare result with change discount")
 
-dictPolicys = []
-dictExpectedReturns = []
-for discount in range(0,11):
+
+print ('start compare that different theta  to affect the outcome==========================')
+ThetaChangePolicys = []
+TheTaChangeExpectedReturns = []
+CompareArr = [10,0,0.1,0.01,0.001,0.0001]
+Times=[]
+PolicyImprovmentCount = []
+
+for theta in CompareArr:
     startTime = time.time()
-    cars = JackCar(disCount=discount*0.1)
-    cars.policyIteration()
-#     cars.prettyPrintPolicy('Policy Iteration:'+"discount="+str(discount*0.1))
-#     cars.prettyPrintStateValue('Policy Iteration:'+"discount="+str(discount*0.1))
-    print("================================start with discount = ",discount*0.1,'============================================')
-    dictPolicys.append(cars.policy)
-    dictExpectedReturns.append(cars.stateValue)
+    cars = JackCar(theta = theta)
+    cars.valueIteration()
+    print(("=============================start with theta = ",theta,"============================="))
+    ThetaChangePolicys.append(cars.policy)
+    TheTaChangeExpectedReturns.append(cars.stateValue)
     states = cars.states
     endTime = time.time()
-    list.append(endTime-startTime)
+    Times.append(endTime-startTime)
+    PolicyImprovmentCount.append(cars.valueImprovementInd)
+# 
+printConparePicture(states,ThetaChangePolicys,TheTaChangeExpectedReturns,"Theta=",CompareArr)
+# 
+# 
+# plt.figure(figureIndex)
+# plt.plot(range(0,5),Times);
+# plt.xlabel("#discount*10")
+# plt.ylabel("#speed Time")
+# plt.title("compare result with change discount")
 
-printConparePicture(states,dictPolicys,dictExpectedReturns)
-
-plt.figure(figureIndex)
-plt.plot(range(0,11),list);
-plt.xlabel("#discount*10")
-plt.ylabel("#speed Time")
-plt.title("compare result with change discount")
+print(PolicyImprovmentCount)
+print(Times)
 
 plt.show()
 
