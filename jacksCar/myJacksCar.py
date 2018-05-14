@@ -45,6 +45,8 @@ class JackCar:
         self.improvePolicy = False
         self.policyImprovementInd = 0
         self.valueImprovementInd = 0
+        self.diff = 0.0
+        self.policyDiff = 0
         self.endImprove = False
         
         self.policy = np.zeros((self.max_cars+1,self.max_cars+1))
@@ -92,7 +94,8 @@ class JackCar:
         newStateValue = np.zeros((self.max_cars+1,self.max_cars+1))
         for i, j in self.states:
             newStateValue[i, j] = self.expectedReturn([i, j], self.policy[i, j])
-        if np.sum(np.abs(newStateValue - self.stateValue)) < self.theta:
+        self.diff = np.sum(np.abs(newStateValue - self.stateValue))
+        if self.diff < self.theta:
             self.stateValue[:] = newStateValue
             self.improvePolicy = True
         self.stateValue[:] = newStateValue  
@@ -153,12 +156,15 @@ class JackCar:
                 break;
             
             self.evaluation()
-        
+    
+    def asynPolicyIteration(self):
+        pass
+    
     
     def valueIteration(self):
-        diff = 100
-        while diff>self.theta:
-            diff = 0.0
+        self.diff = 100
+        while self.diff>self.theta:
+            self.diff = 0.0
             
             oldStateValue = np.zeros((self.max_cars+1,self.max_cars+1))
             oldStateValue[:] = self.stateValue[:]
@@ -177,11 +183,12 @@ class JackCar:
                 self.policy[i,j] = self.actions[bestAction]  
                 self.stateValue[i, j] = np.max(actionReturns)
             
-            diff = np.sum(np.abs(self.stateValue - oldStateValue)) 
+            self.diff = np.sum(np.abs(self.stateValue - oldStateValue))
+            self.policyDiff = np.sum(oldPolicy!=self.policy) 
             self.valueImprovementInd += 1
             print('changeCount..',self.valueImprovementInd)
             print ('policy for',np.sum(self.policy!=oldPolicy),'states changes') 
-            print ('diff..',diff)
+            print ('diff..',self.diff)
  
  
     def prettyPrint(self,data,labels):
@@ -220,6 +227,7 @@ endTime = time.time()
   
 print ('Policy Iteration Time:',endTime-startTime)
 print ('Policy Iteration Count:',cars.policyImprovementInd)
+print ('Policy ITeration Diff:',cars.diff)
   
 print()
 print()
@@ -233,6 +241,7 @@ endTime = time.time()
    
 print ('Value Iteration Time:',endTime-startTime)
 print ('Value Iteration count:',carsValue.valueImprovementInd)
+print('Value Iteration Diff:',carsValue.diff)
  
 
  
@@ -308,7 +317,9 @@ def printConparePicture(states,dictPolicys,dictExpectedReturns,title,CompareArr)
 print ('start compare that different theta  to affect the outcome==========================')
 ThetaChangePolicys = []
 TheTaChangeExpectedReturns = []
-CompareArr = [10,0,0.1,0.01,0.001,0.0001]
+ThetaChangeDiff = []
+ThetaChangePolicyDiff = []
+CompareArr = [10,0.1,0.01,0.001,0.0001,0]
 Times=[]
 PolicyImprovmentCount = []
 
@@ -319,6 +330,8 @@ for theta in CompareArr:
     print(("=============================start with theta = ",theta,"============================="))
     ThetaChangePolicys.append(cars.policy)
     TheTaChangeExpectedReturns.append(cars.stateValue)
+    ThetaChangeDiff.append(cars.diff)
+    ThetaChangePolicyDiff.append(cars.policyDiff)
     states = cars.states
     endTime = time.time()
     Times.append(endTime-startTime)
@@ -333,8 +346,10 @@ printConparePicture(states,ThetaChangePolicys,TheTaChangeExpectedReturns,"Theta=
 # plt.ylabel("#speed Time")
 # plt.title("compare result with change discount")
 
-print(PolicyImprovmentCount)
-print(Times)
+print('policy Improvement count',PolicyImprovmentCount)
+print('speed time:',Times)
+print ('the stateValue diff between last two iteration:',ThetaChangeDiff)
+print('the policy differents between last two iteration:',ThetaChangePolicyDiff)
 
 plt.show()
 
