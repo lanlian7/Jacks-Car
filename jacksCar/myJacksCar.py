@@ -13,6 +13,7 @@ from math import *
 import time
 from _overlapped import NULL
 import _thread
+import threading
 from time import sleep
 
 #poission cache ,for it frequently uses
@@ -160,12 +161,42 @@ class JackCar:
             self.evaluation()
     
     def asynPolicyIteration(self):
-        thread1 = _thread.start_new_thread(self.policyIteration,())
-        _thread.start_new_thread(self.policyIteration,())
+        threads = []
+        thread1 = threading.Thread(target=self.policyIteration)
+        thread2 = threading.Thread(target=self.policyIteration)
+        thread3 = threading.Thread(target=self.policyIteration)
+        thread4 = threading.Thread(target=self.policyIteration)
+        threads.append(thread1)
+        threads.append(thread2)
+        threads.append(thread3)
+        threads.append(thread4)
+        
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        
+#         thread1 = _thread.start_new_thread(self.policyIteration,())
+#         _thread.start_new_thread(self.policyIteration,())
             
     def asynValueIteration(self):
-        _thread.start_new_thread(self.valueIteration, ())
-        _thread.start_new_thread(self.valueIteration,())
+        threads = []
+        thread1 = threading.Thread(target=self.valueIteration)
+        thread2 = threading.Thread(target=self.valueIteration)
+        thread3 = threading.Thread(target=self.valueIteration)
+        thread4 = threading.Thread(target=self.valueIteration)
+        
+        threads.append(thread1)
+        threads.append(thread2)
+        threads.append(thread3)
+        threads.append(thread4)
+        
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+#         _thread.start_new_thread(self.valueIteration, ())
+#         _thread.start_new_thread(self.valueIteration,())
     
     def valueIteration(self):
         self.diff = 1000
@@ -369,7 +400,6 @@ startTime = time.time()
 asynCars = JackCar()
 asynCars.asynPolicyIteration()
 endTime = time.time()
-sleep(300)
 asynCars.prettyPrintPolicy('Asynchronous Policy Iteration:')
 asynCars.prettyPrintStateValue('Asynchronous Policy Iteration:')
 
@@ -403,7 +433,6 @@ startTime = time.time()
 asynValueCars = JackCar()
 asynValueCars.asynValueIteration()
 endTime = time.time()
-sleep(200)
 asynValueCars.prettyPrintPolicy('Asynchronous value Iteration:')
 asynValueCars.prettyPrintStateValue('Asynchronous value Iteration:')
 
